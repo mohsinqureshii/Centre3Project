@@ -32,6 +32,15 @@ export interface Request {
 }
 
 // ==============================
+// Wizard
+// ==============================
+export interface WizardState {
+  step: number;
+  completed: boolean;
+  mop: MOPFormData;
+}
+
+// ==============================
 // MOP (Method of Procedure)
 // ==============================
 export type MOPRiskLevel =
@@ -41,26 +50,44 @@ export type MOPRiskLevel =
   | "CRITICAL";
 
 export interface MOPRiskMatrix {
-  likelihood: number; // 1–5
-  severity: number;   // 1–5
-  score: number;      // likelihood × severity
+  likelihood: number;
+  severity: number;
+  score: number;
   level: MOPRiskLevel;
   mitigation?: string;
 }
 
-export interface MOPFormData {
-  title: string;
-  description: string;
-  risks: MOPRiskMatrix[];
+export interface MOPProjectInfo {
+  projectName: string;
+  projectNumber: string;
+  projectOwner: string;
+  mainService: string;
+  projectStatus: string;
 }
 
-// ==============================
-// Wizard / Forms
-// ==============================
-export interface WizardState {
-  step: number;
-  completed: boolean;
+export interface MOPContractorInfo {
+  companyName: string;
+  contactPerson: string;
+  mobileNumber: string;
+  email: string;
+  lineManager: string;
+}
 
-  /** MOP wizard state */
-  mop: MOPFormData;
+export interface MOPChecklistItem {
+  task: string;
+  assignee: string;
+  status: "Pending" | "Completed";
+}
+
+export interface MOPImplementationStep {
+  step: string;
+  owner: string;
+}
+
+export interface MOPFormData {
+  projectInfo: MOPProjectInfo;
+  contractor: MOPContractorInfo;
+  readinessChecklist: MOPChecklistItem[];
+  implementationSteps: MOPImplementationStep[];
+  riskMatrix: MOPRiskMatrix;
 }
