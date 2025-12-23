@@ -1,23 +1,29 @@
-// components/ui/badge.tsx
-import clsx from 'clsx';
-import { RequestStatus } from '@/lib/centre3Types';
+import { cn } from "./utils";
 
-const statusClasses: Record<RequestStatus, string> = {
-  DRAFT: 'bg-gray-200 text-gray-800',
-  SUBMITTED: 'bg-blue-200 text-blue-800',
-  APPROVED: 'bg-green-200 text-green-800',
-  REJECTED: 'bg-red-200 text-red-800',
+type BadgeProps = {
+  children: React.ReactNode;
+  variant?: "default" | "success" | "warning" | "danger";
 };
 
-export function StatusBadge({ status }: { status: RequestStatus }) {
+function Badge({ children, variant = "default" }: BadgeProps) {
+  const styles = {
+    default: "bg-gray-100 text-gray-800",
+    success: "bg-green-100 text-green-800",
+    warning: "bg-yellow-100 text-yellow-800",
+    danger: "bg-red-100 text-red-800"
+  };
+
   return (
     <span
-      className={clsx(
-        'px-2 py-1 rounded text-xs font-semibold uppercase',
-        statusClasses[status]
+      className={cn(
+        "inline-flex items-center rounded px-2 py-1 text-xs font-medium",
+        styles[variant]
       )}
     >
-      {status}
+      {children}
     </span>
   );
 }
+
+export default Badge;
+export { Badge };

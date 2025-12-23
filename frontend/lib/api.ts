@@ -1,25 +1,27 @@
-import axios from 'axios';
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001";
 
-const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
-});
+async function api(path: string, options: RequestInit = {}) {
+  const token =
+    typeof window !== "undefined"
+      ? localStorage.getItem("token")
+      : null;
 
-api.interceptors.request.use((config) => {
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(options.headers || {})
     }
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || res.statusText);
   }
-  return config;
-});
 
-export async function apiGet(url: string) {
-  const res = await api.get(url);
-  return res.data;
+  return res.json();
 }
 
-export async function apiPost(url: string, data: any) {
-  const res = await api.post(url, data);
-  return res.data;
-}
+export default api;
