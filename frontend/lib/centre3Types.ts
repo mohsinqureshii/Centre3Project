@@ -1,8 +1,9 @@
+// ===== Requests =====
 export type RequestStatus =
-  | 'DRAFT'
-  | 'SUBMITTED'
-  | 'APPROVED'
-  | 'REJECTED';
+  | "DRAFT"
+  | "SUBMITTED"
+  | "APPROVED"
+  | "REJECTED";
 
 export interface Visitor {
   fullName: string;
@@ -26,4 +27,25 @@ export interface Request {
   visitors: Visitor[];
 
   createdAt: string;
+}
+
+// ===== Wizard / Forms =====
+export type WizardState = {
+  step: number;
+  completed: boolean;
+};
+
+// ===== MOP (Method of Procedure) =====
+export type MOPRiskLevel = "LOW" | "MEDIUM" | "HIGH";
+
+export interface MOPRiskMatrix {
+  likelihood: number;
+  severity: number;
+  riskLevel: MOPRiskLevel;
+}
+
+export interface MOPFormData {
+  title: string;
+  description: string;
+  risks: MOPRiskMatrix[];
 }
