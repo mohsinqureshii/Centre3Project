@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "echo \"Skipping TypeScript checks for production\"",
-    "start": "node dist/server.js",
+    "build": "echo \"No build step needed\"",
+    "start": "tsx src/server.ts",
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
