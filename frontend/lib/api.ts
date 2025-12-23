@@ -1,7 +1,10 @@
 const API_BASE =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001";
 
-async function api(path: string, options: RequestInit = {}) {
+export default async function api(
+  path: string,
+  options: RequestInit = {}
+) {
   const token =
     typeof window !== "undefined"
       ? localStorage.getItem("token")
@@ -23,5 +26,3 @@ async function api(path: string, options: RequestInit = {}) {
 
   return res.json();
 }
-
-export default api;
