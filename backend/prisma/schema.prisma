@@ -1,0 +1,410 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// =======================
+// ENUMS
+// =======================
+
+enum UserRole {
+  SUPER_ADMIN
+  SECURITY_OFFICER
+  SECURITY_SUPERVISOR
+  DC_MANAGER
+  COMPLIANCE
+  REQUESTOR
+}
+
+enum UserType {
+  INTERNAL
+  EXTERNAL
+}
+
+enum RequestType {
+  ADMIN_VISIT
+  TEMPORARY_ENTRY_PERMISSION
+  WORK_PERMIT
+  METHOD_OF_PROCEDURE
+  MATERIAL_VEHICLE_PERMIT
+}
+
+enum RequestStatus {
+  DRAFT
+  SUBMITTED
+  IN_APPROVAL
+  APPROVED
+  REJECTED
+  ACTIVE
+  EXPIRED
+  CLOSED
+  BLOCKED
+}
+
+enum ApprovalAction {
+  APPROVE
+  REJECT
+  RETURN_FOR_CHANGES
+}
+
+enum Severity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+enum ZoneLockState {
+  ACTIVE
+  LOCKED
+}
+
+enum CredentialType {
+  RFID_CARD
+  MOBILE_BLE
+  QR_PASS
+}
+
+enum CredentialStatus {
+  REQUESTED
+  ISSUED
+  ACTIVE
+  SUSPENDED
+  REVOKED
+  EXPIRED
+  LOST
+}
+
+// =======================
+// USER
+// =======================
+
+model User {
+  id           String   @id @default(uuid())
+  userCode     String   @unique @default(uuid())
+  fullName     String
+  email        String   @unique
+  phone        String?
+  passwordHash String
+  role         UserRole
+  userType     UserType @default(INTERNAL)
+  isActive     Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  approvals ApprovalLog[]
+  auditLogs AuditLog[]
+}
+
+// =======================
+// LOCATION / ZONE / ROOM
+// =======================
+
+model Location {
+  id       String @id @default(uuid())
+  country  String
+  region   String
+  city     String
+  siteCode String
+  siteName String
+
+  isActive Boolean @default(true)
+
+  zones Zone[]
+  rooms Room[]
+
+  accessRequests AccessRequest[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Zone {
+  id         String  @id @default(uuid())
+  locationId String
+  name       String
+  code       String?
+  isLockable Boolean @default(true)
+  isActive   Boolean @default(true)
+
+  location       Location        @relation(fields: [locationId], references: [id])
+  rooms          Room[]
+  lockEvents     ZoneLockEvent[]
+  accessRequests AccessRequest[] // ✅ REQUIRED BACK-RELATION
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Room {
+  id         String  @id @default(uuid())
+  zoneId     String
+  locationId String
+  name       String
+  code       String?
+
+  zone           Zone            @relation(fields: [zoneId], references: [id])
+  location       Location        @relation(fields: [locationId], references: [id])
+  accessRequests AccessRequest[] // ✅ BACK-RELATION
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// =======================
+// ACTIVITIES / PROCESSES
+// =======================
+
+model ActivityCategory {
+  id         String     @id @default(uuid())
+  name       String
+  activities Activity[]
+}
+
+model Activity {
+  id               String  @id @default(uuid())
+  categoryId       String
+  name             String
+  riskLevel        String
+  defaultProcessId String?
+
+  category       ActivityCategory   @relation(fields: [categoryId], references: [id])
+  defaultProcess ProcessDefinition? @relation(fields: [defaultProcessId], references: [id])
+}
+
+model ProcessDefinition {
+  id          String      @id @default(uuid())
+  name        String
+  requestType RequestType
+  isActive    Boolean     @default(true)
+
+  stages         ProcessStage[]
+  activities     Activity[]
+  accessRequests AccessRequest[]
+}
+
+model ProcessStage {
+  id            String   @id @default(uuid())
+  processId     String
+  stageOrder    Int
+  name          String
+  approverRole  UserRole
+  conditionJson Json?
+  slaHours      Int?
+
+  process ProcessDefinition @relation(fields: [processId], references: [id])
+}
+
+// =======================
+// ACCESS REQUEST
+// =======================
+
+model AccessRequest {
+  id          String        @id @default(uuid())
+  requestNo   String        @unique
+  requestType RequestType
+  status      RequestStatus @default(DRAFT)
+
+  requestorName        String
+  requestorEmail       String
+  requestorPhone       String
+  requestorCompany     String
+  requestorIdNumber    String?
+  requestorNationality String?
+  requestorDepartment  String?
+
+  locationId String
+  zoneId     String?
+  roomId     String?
+
+  startAt DateTime
+  endAt   DateTime
+
+  vip      Boolean @default(false)
+  purpose  String?
+  comments String?
+
+  activityId String?
+  processId  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  location Location           @relation(fields: [locationId], references: [id])
+  zone     Zone?              @relation(fields: [zoneId], references: [id])
+  room     Room?              @relation(fields: [roomId], references: [id])
+  process  ProcessDefinition? @relation(fields: [processId], references: [id])
+
+  visitors       RequestVisitor[]
+  attachments    Attachment[]
+  stageInstances RequestStageInstance[]
+  approvalLogs   ApprovalLog[]
+  checkEvents    CheckEvent[]
+  materials      MaterialItem[]
+  credentials    Credential[]
+}
+
+// =======================
+// REQUEST DETAILS
+// =======================
+
+model RequestVisitor {
+  id        String @id @default(uuid())
+  requestId String
+
+  fullName    String
+  nationality String
+  idType      String?
+  idNumber    String
+  company     String
+  jobTitle    String?
+  phone       String
+  email       String?
+
+  request AccessRequest @relation(fields: [requestId], references: [id])
+}
+
+model Attachment {
+  id        String @id @default(uuid())
+  requestId String
+  type      String
+  fileName  String
+  fileUrl   String
+
+  uploadedAt DateTime @default(now())
+
+  request AccessRequest @relation(fields: [requestId], references: [id])
+}
+
+model RequestStageInstance {
+  id           String   @id @default(uuid())
+  requestId    String
+  stageOrder   Int
+  stageName    String
+  approverRole UserRole
+  status       String
+
+  decidedByUserId String?
+  decidedAt       DateTime?
+  comment         String?
+
+  request AccessRequest @relation(fields: [requestId], references: [id])
+}
+
+model ApprovalLog {
+  id        String         @id @default(uuid())
+  requestId String
+  action    ApprovalAction
+  comment   String?
+  actorId   String
+
+  createdAt DateTime @default(now())
+
+  request AccessRequest @relation(fields: [requestId], references: [id])
+  actor   User          @relation(fields: [actorId], references: [id])
+}
+
+model CheckEvent {
+  id        String  @id @default(uuid())
+  requestId String
+  type      String
+  note      String?
+  actorId   String
+
+  createdAt DateTime @default(now())
+
+  request AccessRequest @relation(fields: [requestId], references: [id])
+}
+
+model MaterialItem {
+  id           String  @id @default(uuid())
+  requestId    String
+  movementType String
+  description  String
+  partNumber   String?
+  serialNo     String?
+  quantity     Int
+  cabinetRack  String?
+  reason       String?
+
+  request AccessRequest @relation(fields: [requestId], references: [id])
+}
+
+// =======================
+// SECURITY / ACCESS
+// =======================
+
+model SecurityAlert {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  severity    Severity
+
+  locationId String?
+  zoneId     String?
+  room       String?
+  entryPoint String?
+  isSeen     Boolean @default(false)
+
+  createdAt    DateTime  @default(now())
+  seenAt       DateTime?
+  seenByUserId String?
+}
+
+model ZoneLockEvent {
+  id      String        @id @default(uuid())
+  zoneId  String
+  state   ZoneLockState
+  reason  String?
+  actorId String
+
+  createdAt DateTime @default(now())
+
+  zone Zone @relation(fields: [zoneId], references: [id])
+}
+
+// =======================
+// CREDENTIALS
+// =======================
+
+model Credential {
+  id          String           @id @default(uuid())
+  requestId   String
+  visitorName String
+  type        CredentialType
+  status      CredentialStatus
+
+  credentialNumber String?
+  bleToken         String?
+  qrToken          String?
+
+  validFrom  DateTime
+  validUntil DateTime
+
+  allowedZoneIds Json?
+  issuedAt       DateTime  @default(now())
+  revokedAt      DateTime?
+
+  request AccessRequest @relation(fields: [requestId], references: [id])
+}
+
+// =======================
+// AUDIT
+// =======================
+
+model AuditLog {
+  id       String  @id @default(uuid())
+  actorId  String?
+  entity   String
+  entityId String
+  action   String
+  meta     Json?
+
+  createdAt DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id])
+}

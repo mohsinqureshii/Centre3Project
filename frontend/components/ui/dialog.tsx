@@ -1,0 +1,29 @@
+import React from "react";
+
+export function Dialog({
+  open,
+  onClose,
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div className="relative w-full max-w-lg rounded-xl border border-zinc-800 bg-zinc-950 p-4 shadow-xl">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+export function DialogTitle({ children }: { children: React.ReactNode }) {
+  return <div className="text-lg font-semibold mb-2">{children}</div>;
+}
+
+export function DialogFooter({ children }: { children: React.ReactNode }) {
+  return <div className="mt-4 flex gap-2 justify-end">{children}</div>;
+}

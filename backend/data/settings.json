@@ -1,0 +1,72 @@
+{
+  "permissions": {
+    "SUPER_ADMIN": {
+      "settings:read": true,
+      "settings:write": true,
+      "requests:read": true,
+      "requests:write": true,
+      "approvals:act": true,
+      "alerts:read": true,
+      "alerts:write": true,
+      "locks:act": true,
+      "reports:read": true,
+      "reports:export": true
+    },
+    "SECURITY_OFFICER": {
+      "alerts:read": true,
+      "requests:read": true,
+      "approvals:act": true,
+      "locks:act": true,
+      "reports:read": true
+    },
+    "SECURITY_SUPERVISOR": {
+      "alerts:read": true,
+      "requests:read": true,
+      "approvals:act": true,
+      "locks:act": true,
+      "reports:read": true,
+      "reports:export": true
+    },
+    "DC_MANAGER": {
+      "requests:read": true,
+      "approvals:act": true,
+      "reports:read": true
+    },
+    "COMPLIANCE": {
+      "requests:read": true,
+      "approvals:act": true,
+      "reports:read": true
+    },
+    "REQUESTOR": {
+      "requests:read": true,
+      "requests:write": true
+    }
+  },
+  "alertTypes": [
+    {
+      "key": "DOOR_FORCED",
+      "name": "Door Forced Open",
+      "defaultSeverity": "CRITICAL",
+      "routingRoles": [
+        "SECURITY_OFFICER",
+        "SECURITY_SUPERVISOR"
+      ]
+    },
+    {
+      "key": "ACCESS_DENIED",
+      "name": "Access Denied",
+      "defaultSeverity": "WARNING",
+      "routingRoles": [
+        "SECURITY_OFFICER"
+      ]
+    },
+    {
+      "key": "GENERAL_INFO",
+      "name": "General Info",
+      "defaultSeverity": "INFO",
+      "routingRoles": [
+        "SECURITY_OFFICER"
+      ]
+    }
+  ]
+}

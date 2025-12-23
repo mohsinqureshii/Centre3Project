@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  height: 100%;
+}
+
+/* DO NOT add font-family here */
+
+.input {
+  @apply rounded-lg border border-slate-300 px-3 py-2 text-sm;
+}
+
+.btn-primary {
+  @apply rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700;
+}
+
+.btn-outline {
+  @apply rounded-lg border px-4 py-2 text-sm hover:bg-slate-50;
+}
+
