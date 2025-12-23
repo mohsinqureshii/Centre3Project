@@ -1,3 +1,4 @@
+import React from "react";
 import { cn } from "./utils";
 
 type BadgeProps = {
@@ -25,5 +26,22 @@ function Badge({ children, variant = "default" }: BadgeProps) {
   );
 }
 
+/**
+ * ✅ StatusBadge
+ * Used by:
+ * - requests list
+ * - request details
+ * - approvals inbox
+ */
+function StatusBadge({ status }: { status: string }) {
+  const map: Record<string, BadgeProps["variant"]> = {
+    PENDING: "warning",
+    APPROVED: "success",
+    REJECTED: "danger"
+  };
+
+  return <Badge variant={map[status] || "default"}>{status}</Badge>;
+}
+
 export default Badge;
-export { Badge };
+export { Badge, StatusBadge };
