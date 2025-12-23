@@ -1,4 +1,6 @@
-// ===== Requests =====
+// ==============================
+// Requests
+// ==============================
 export type RequestStatus =
   | "DRAFT"
   | "SUBMITTED"
@@ -29,19 +31,35 @@ export interface Request {
   createdAt: string;
 }
 
-// ===== Wizard / Forms =====
+// ==============================
+// Wizard / Forms
+// ==============================
 export type WizardState = {
   step: number;
   completed: boolean;
 };
 
-// ===== MOP (Method of Procedure) =====
-export type MOPRiskLevel = "LOW" | "MEDIUM" | "HIGH";
+// ==============================
+// MOP (Method of Procedure)
+// ==============================
+export type MOPRiskLevel =
+  | "LOW"
+  | "MEDIUM"
+  | "HIGH"
+  | "CRITICAL";
 
 export interface MOPRiskMatrix {
-  likelihood: number;
-  severity: number;
-  riskLevel: MOPRiskLevel;
+  likelihood: number; // 1–5
+  severity: number;   // 1–5
+
+  /** Computed as likelihood × severity */
+  score: number;
+
+  /** Derived from score */
+  level: MOPRiskLevel;
+
+  /** Required when level is HIGH or CRITICAL */
+  mitigation?: string;
 }
 
 export interface MOPFormData {
