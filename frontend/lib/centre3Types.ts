@@ -32,14 +32,6 @@ export interface Request {
 }
 
 // ==============================
-// Wizard / Forms
-// ==============================
-export type WizardState = {
-  step: number;
-  completed: boolean;
-};
-
-// ==============================
 // MOP (Method of Procedure)
 // ==============================
 export type MOPRiskLevel =
@@ -51,14 +43,8 @@ export type MOPRiskLevel =
 export interface MOPRiskMatrix {
   likelihood: number; // 1–5
   severity: number;   // 1–5
-
-  /** Computed as likelihood × severity */
-  score: number;
-
-  /** Derived from score */
+  score: number;      // likelihood × severity
   level: MOPRiskLevel;
-
-  /** Required when level is HIGH or CRITICAL */
   mitigation?: string;
 }
 
@@ -66,4 +52,15 @@ export interface MOPFormData {
   title: string;
   description: string;
   risks: MOPRiskMatrix[];
+}
+
+// ==============================
+// Wizard / Forms
+// ==============================
+export interface WizardState {
+  step: number;
+  completed: boolean;
+
+  /** MOP wizard state */
+  mop: MOPFormData;
 }
