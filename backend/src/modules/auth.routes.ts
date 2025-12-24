@@ -1,41 +1,39 @@
 import { Router } from "express";
 import prisma from "../prisma.js";
-import { authMiddleware } from "../middlewares/auth.middleware.js";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 const router = Router();
 
-/**
- * DEV AUTH ENDPOINT
- * (Real JWT will come later)
- */
 router.post("/login", async (req, res) => {
-  const { email } = req.body;
+  const { email, password } = req.body;
 
-  if (!email) {
-    return res.status(400).json({ message: "Email required" });
-  }
+  if (!email || !password)
+    return res.status(400).json({ message: "Email & password required" });
 
-  const user = await prisma.user.findFirst({
+  const user = await prisma.user.findUnique({
     where: { email },
   });
 
-  if (!user) {
-    return res.status(401).json({ message: "Invalid user" });
-  }
+  if (!user)
+    return res.status(401).json({ message: "Invalid email or password" });
 
-  // DEV TOKEN (mock)
-  res.json({
-    token: "DEV_TOKEN",
-    user: {
+  const valid = await bcrypt.compare(password, user.passwordHash);
+
+  if (!valid)
+    return res.status(401).json({ message: "Invalid email or password" });
+
+  const token = jwt.sign(
+    {
       id: user.id,
       email: user.email,
       role: user.role,
     },
-  });
-});
+    process.env.JWT_SECRET!,
+    { expiresIn: "1d" }
+  );
 
-router.get("/me", authMiddleware, async (req, res) => {
-  res.json({ user: (req as any).user });
+  res.json({ token, user });
 });
 
 export default router;

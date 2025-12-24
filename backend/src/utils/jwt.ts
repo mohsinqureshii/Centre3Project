@@ -1,3 +1,11 @@
 import jwt from "jsonwebtoken";
-export function signToken(p:any,s:string){return jwt.sign(p,s,{expiresIn:"8h"});}
-export function verifyToken(t:string,s:string){return jwt.verify(t,s) as any;}
+
+const JWT_SECRET = process.env.JWT_SECRET || "C3_SECRET";
+
+export function signToken(payload: any) {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: "7d" });
+}
+
+export function verifyToken(token: string) {
+  return jwt.verify(token, JWT_SECRET);
+}

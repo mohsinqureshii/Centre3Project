@@ -1,48 +1,27 @@
-// backend/middlewares/auth.middleware.ts
-
 import { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
 
-/**
- * ============================================================
- *  DEV AUTH MIDDLEWARE  — TEMPORARY FOR FRONTEND INTEGRATION
- * ============================================================
- *
- * ❗ This bypasses real authentication.
- * ❗ It ALWAYS injects a SUPER_ADMIN dev user.
- *
- * Replace with real JWT logic later when login is implemented.
- */
-
-function injectDevUser(req: Request, res: Response, next: NextFunction) {
-  (req as any).user = {
-    id: "dev-user",
-    email: "dev@centre3.local",
-    role: "SUPER_ADMIN",
-  };
-
-  next();
+export interface AuthedRequest extends Request {
+  user?: any;
 }
 
-/**
- * Used by most routes
- */
 export function authMiddleware(
-  req: Request,
+  req: AuthedRequest,
   res: Response,
   next: NextFunction
 ) {
-  return injectDevUser(req, res, next);
-}
+  const auth = req.headers.authorization;
 
-/**
- * Used by older modules (reports, approvals, etc.)
- */
-export function requireAuth(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
-  return injectDevUser(req, res, next);
-}
+  if (!auth || !auth.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
 
-export default authMiddleware;
+  try {
+    const token = auth.replace("Bearer ", "");
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    return res.status(401).json({ message: "Invalid token" });
+  }
+}
