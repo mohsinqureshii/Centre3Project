@@ -1,5 +1,6 @@
-// ================= Requests =================
-
+// =====================
+// Requests
+// =====================
 export type RequestStatus =
   | "DRAFT"
   | "SUBMITTED"
@@ -26,20 +27,24 @@ export interface Request {
   roomName?: string;
 
   visitors: Visitor[];
+
   createdAt: string;
 }
 
-// ================= Wizard =================
-
+// =====================
+// Wizard
+// =====================
 export interface WizardState {
   step: number;
   completed: boolean;
+
   mop?: MOPFormData;
   mvp?: MVPFormData;
 }
 
-// ================= MOP (Method of Procedure) =================
-
+// =====================
+// MOP (Method of Procedure)
+// =====================
 export type MOPRiskLevel = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 
 export interface MOPRiskMatrix {
@@ -50,77 +55,75 @@ export interface MOPRiskMatrix {
   mitigation?: string;
 }
 
-export interface MOPProjectInfo {
-  projectName: string;
-  projectNumber: string;
-  projectOwner: string;
-  mainService: string;
-  projectStatus: string;
-}
-
-export interface MOPContractor {
-  companyName: string;
-  contactPerson: string;
-  mobileNumber: string;
-  email: string;
-  lineManager: string;
-}
-
-export interface MOPReadinessItem {
-  task: string;
-  assignee: string;
-  status: "Pending" | "Done";
-}
-
-export interface MOImplementationStep {
-  step: string;
-  owner: string;
-}
-
-export interface MOPRollbackPlan {
-  scenario: string;
-  action: string;
-}
-
-export interface MOPParticipant {
-  name: string;
-  company: string;
-  designation: string;
-  contact?: string;
-}
-
 export interface MOPFormData {
-  projectInfo: MOPProjectInfo;
-  contractor: MOPContractor;
-  readinessChecklist: MOPReadinessItem[];
-  implementationSteps: MOImplementationStep[];
-  rollbackPlans: MOPRollbackPlan[];
-  participants: MOPParticipant[];
+  projectInfo: {
+    projectName: string;
+    projectNumber: string;
+    projectOwner: string;
+    mainService: string;
+    projectStatus: string;
+  };
+
+  contractor: {
+    companyName: string;
+    contactPerson: string;
+    mobileNumber: string;
+    email: string;
+    lineManager: string;
+  };
+
+  readinessChecklist: {
+    task: string;
+    assignee: string;
+    status: "Pending" | "Done";
+  }[];
+
+  implementationSteps: {
+    step: string;
+    owner: string;
+  }[];
+
+  rollbackPlans: {
+    scenario: string;
+    action: string;
+  }[];
+
+  participants: {
+    name: string;
+    company: string;
+    designation: string;
+    contact?: string;
+  }[];
+
   riskMatrix: MOPRiskMatrix;
 }
 
-// ================= MVP (Material / Vehicle Permit) =================
+// =====================
+// MVP (Material Vehicle Permit)
+// =====================
+export type MVPDecisionType =
+  | "WITH_VEHICLE"
+  | "WITHOUT_VEHICLE";
 
-export interface MVPVehicle {
-  vehicleNumber: string;
-  driverName: string;
-  licenseNumber: string;
-}
-
-export interface MVPMaterial {
-  materialName: string;
-  quantity: string;
-  remarks?: string;
-}
+export type MVPMovementType =
+  | "ENTRY"
+  | "EXIT";
 
 export interface MVPFormData {
-  requesterName: string;
-  department: string;
-  purpose: string;
-  visitDate: string;
+  decisionType: MVPDecisionType;
+  movementType: MVPMovementType;
 
-  vehicles: MVPVehicle[];
-  materials: MVPMaterial[];
+  responsible: {
+    name: string;
+    company: string;
+    mobile: string;
+    email: string;
+    idNumber: string;
+  };
 
-  remarks?: string;
+  materials: {
+    description: string;
+    quantity: number;
+    reason: string;
+  }[];
 }
