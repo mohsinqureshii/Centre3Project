@@ -1,22 +1,10 @@
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL ||
-  "http://localhost:4001";
-
-/**
- * Central API helper
- * - Automatically sends auth token
- * - Safe fallback for dev
- */
-export async function apiFetch<T>(
-  path: string,
-  options: RequestInit = {}
-): Promise<T> {
+export async function apiFetch(path: string, options: RequestInit = {}) {
+  const base = process.env.NEXT_PUBLIC_API_URL || "";
   const token =
-    typeof window !== "undefined"
-      ? localStorage.getItem("centre3_token")
-      : null;
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
-  const url = `${API_BASE}${path}`;
+  // Normalize slashes — prevents "//api"
+  const url = `${base.replace(/\/+$/, "")}/${path.replace(/^\/+/, "")}`;
 
   const res = await fetch(url, {
     ...options,
@@ -28,12 +16,8 @@ export async function apiFetch<T>(
   });
 
   if (!res.ok) {
-    let message = "API error";
-    try {
-      const data = await res.json();
-      message = data?.message || message;
-    } catch {}
-    throw new Error(message);
+    const text = await res.text();
+    throw new Error(text || res.statusText);
   }
 
   return res.json();
