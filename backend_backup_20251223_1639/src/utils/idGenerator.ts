@@ -1,0 +1,1 @@
+export function generateRequestNo(prefix='REQ'){const ts=new Date().toISOString().replace(/[-:TZ.]/g,'').slice(0,14);const rand=Math.random().toString(36).slice(2,6).toUpperCase();return `${prefix}-${ts}-${rand}`;}

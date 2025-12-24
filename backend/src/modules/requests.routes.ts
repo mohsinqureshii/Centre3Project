@@ -36,6 +36,7 @@ router.post("/", authMiddleware, async (req, res) => {
 
   const request = await prisma.accessRequest.create({
     data: {
+      requestNo: "REQ-" + Date.now(), // REQUIRED FIELD
       requestType,
       locationId,
       requestorName,
@@ -49,6 +50,8 @@ router.post("/", authMiddleware, async (req, res) => {
 
   res.json(request);
 });
+
+
 
 /* =========================================================
    UPDATE REQUEST (ONLY IF DRAFT)

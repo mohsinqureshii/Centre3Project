@@ -1,36 +1,48 @@
 import { Router } from "express";
-import { authMiddleware } from "../../middlewares/auth.middleware.js";
-import { rbacMiddleware } from "../../middlewares/rbac.middleware.js";
-import * as ctrl from "./alerts.controller.js";
+import prisma from "../../prisma.js";
+import { requireRole } from "../../middlewares/rbac.middleware.js";
 
-export const alertsRouter = Router();
+const router = Router();
 
-// View alerts: Security/Managers/Super Admin
-alertsRouter.get(
-  "/",
-  authMiddleware,
-  rbacMiddleware(["SECURITY_OFFICER", "SECURITY_SUPERVISOR", "DC_MANAGER", "SUPER_ADMIN"]),
-  ctrl.getAlerts
-);
+/**
+ * GET all alerts (Admin only)
+ */
+router.get("/", requireRole("SUPER_ADMIN"), async (_req, res) => {
+  try {
+    const alerts = await prisma.securityAlert.findMany({
+      orderBy: { createdAt: "desc" },
+    });
 
-alertsRouter.post(
-  "/:id/seen",
-  authMiddleware,
-  rbacMiddleware(["SECURITY_OFFICER", "SECURITY_SUPERVISOR", "DC_MANAGER", "SUPER_ADMIN"]),
-  ctrl.postSeen
-);
+    res.json(alerts);
+  } catch (err) {
+    console.error("Error fetching alerts:", err);
+    res.status(500).json({ message: "Failed to fetch alerts" });
+  }
+});
 
-alertsRouter.post(
-  "/seen-all",
-  authMiddleware,
-  rbacMiddleware(["SECURITY_OFFICER", "SECURITY_SUPERVISOR", "DC_MANAGER", "SUPER_ADMIN"]),
-  ctrl.postSeenAll
-);
+/**
+ * CREATE an alert
+ */
+router.post("/", requireRole("SUPER_ADMIN"), async (req, res) => {
+  try {
+    const { title, severity, description, locationId, zoneId, room } = req.body;
 
-// Optional: create alert for staging/testing
-alertsRouter.post(
-  "/",
-  authMiddleware,
-  rbacMiddleware(["SECURITY_SUPERVISOR", "SUPER_ADMIN"]),
-  ctrl.postCreateAlert
-);
+    const alert = await prisma.securityAlert.create({
+      data: {
+        title,
+        severity,
+        description,
+        locationId,
+        zoneId,
+        room,
+      },
+    });
+
+    res.status(201).json(alert);
+  } catch (err) {
+    console.error("Error creating alert:", err);
+    res.status(500).json({ message: "Failed to create alert" });
+  }
+});
+
+export default router;

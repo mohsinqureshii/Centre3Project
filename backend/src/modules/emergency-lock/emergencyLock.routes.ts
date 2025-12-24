@@ -1,38 +1,46 @@
 import { Router } from "express";
-import { authMiddleware } from "../../middlewares/auth.middleware.js";
-import { rbacMiddleware } from "../../middlewares/rbac.middleware.js";
-import * as ctrl from "./emergencyLock.controller.js";
+import prisma from "../../prisma.js";
+import { requireRole } from "../../middlewares/rbac.middleware.js";
 
-export const emergencyLockRouter = Router();
+const router = Router();
 
-// GET /api/zones/lock-status
-emergencyLockRouter.get(
-  "/zones/lock-status",
-  authMiddleware,
-  rbacMiddleware(["SECURITY_OFFICER", "SECURITY_SUPERVISOR", "DC_MANAGER", "SUPER_ADMIN"]),
-  ctrl.getLockStatus
-);
+/**
+ * GET lock events
+ */
+router.get("/", requireRole("SUPER_ADMIN"), async (_req, res) => {
+  try {
+    const events = await prisma.zoneLockEvent.findMany({
+      orderBy: { createdAt: "desc" },
+    });
 
-// POST /api/zones/:id/lock
-emergencyLockRouter.post(
-  "/zones/:id/lock",
-  authMiddleware,
-  rbacMiddleware(["SECURITY_OFFICER", "SECURITY_SUPERVISOR", "SUPER_ADMIN"]),
-  ctrl.postLock
-);
+    res.json(events);
+  } catch (err) {
+    console.error("Error fetching lock events:", err);
+    res.status(500).json({ message: "Failed to fetch lock events" });
+  }
+});
 
-// POST /api/zones/:id/unlock
-emergencyLockRouter.post(
-  "/zones/:id/unlock",
-  authMiddleware,
-  rbacMiddleware(["SECURITY_OFFICER", "SECURITY_SUPERVISOR", "SUPER_ADMIN"]),
-  ctrl.postUnlock
-);
+/**
+ * LOCK or UNLOCK a zone
+ */
+router.post("/", requireRole("SUPER_ADMIN"), async (req, res) => {
+  try {
+    const { zoneId, state, reason } = req.body;
 
-// POST /api/zones/lock-all
-emergencyLockRouter.post(
-  "/zones/lock-all",
-  authMiddleware,
-  rbacMiddleware(["SECURITY_SUPERVISOR", "SUPER_ADMIN"]),
-  ctrl.postLockAll
-);
+    const event = await prisma.zoneLockEvent.create({
+      data: {
+        zoneId,
+        state,
+        reason,
+        actorId: (req as any).user?.id || "system",
+      },
+    });
+
+    res.status(201).json(event);
+  } catch (err) {
+    console.error("Emergency lock error:", err);
+    res.status(500).json({ message: "Failed to update zone lock state" });
+  }
+});
+
+export default router;

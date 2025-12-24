@@ -1,27 +1,28 @@
+// backend/src/middlewares/auth.middleware.ts
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
 
-export interface AuthedRequest extends Request {
-  user?: any;
+/**
+ * DEV MIDDLEWARE — ALWAYS LOGGED IN AS SUPER ADMIN
+ */
+function injectDevUser(req: Request, _res: Response, next: NextFunction) {
+  (req as any).user = {
+    id: "dev-user",
+    email: "dev@centre3.local",
+    role: "SUPER_ADMIN",
+  };
+  next();
 }
 
+/** MAIN AUTH USED BY ALL ROUTES */
 export function authMiddleware(
-  req: AuthedRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ) {
-  const auth = req.headers.authorization;
-
-  if (!auth || !auth.startsWith("Bearer ")) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
-  try {
-    const token = auth.replace("Bearer ", "");
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!);
-    req.user = decoded;
-    next();
-  } catch (err) {
-    return res.status(401).json({ message: "Invalid token" });
-  }
+  return injectDevUser(req, res, next);
 }
+
+/** BACKWARD COMPATIBILITY (OLD ROUTES STILL IMPORT requireAuth) */
+export const requireAuth = authMiddleware;
+
+export default authMiddleware;
