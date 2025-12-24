@@ -1,10 +1,12 @@
 export async function apiFetch(path: string, options: RequestInit = {}) {
   const base = process.env.NEXT_PUBLIC_API_URL || "";
+
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
-  // Normalize slashes — prevents "//api"
-  const url = `${base.replace(/\/+$/, "")}/${path.replace(/^\/+/, "")}`;
+  // Always normalize slashes
+  const url =
+    base.replace(/\/+$/, "") + "/" + path.replace(/^\/+/, "");
 
   const res = await fetch(url, {
     ...options,
