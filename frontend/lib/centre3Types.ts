@@ -1,4 +1,5 @@
-// =================== Requests ===================
+// ================= Requests =================
+
 export type RequestStatus =
   | "DRAFT"
   | "SUBMITTED"
@@ -29,16 +30,15 @@ export interface Request {
   createdAt: string;
 }
 
-// =================== Wizard ===================
+// ================= Wizard =================
+
 export interface WizardState {
   step: number;
   completed: boolean;
-
-  // Mop wizard stores form state here
   mop?: MOPFormData;
 }
 
-// =================== MOP (Method of Procedure) ===================
+// ================= MOP (Method of Procedure) =================
 
 export type MOPRiskLevel = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 
@@ -50,48 +50,51 @@ export interface MOPRiskMatrix {
   mitigation?: string;
 }
 
+export interface MOPProjectInfo {
+  projectName: string;
+  projectNumber: string;
+  projectOwner: string;
+  mainService: string;
+  projectStatus: string;
+}
+
+export interface MOPContractor {
+  companyName: string;
+  contactPerson: string;
+  mobileNumber: string;
+  email: string;
+  lineManager: string;
+}
+
+export interface MOPReadinessItem {
+  task: string;
+  assignee: string;
+  status: "Pending" | "Done";
+}
+
+export interface MOImplementationStep {
+  step: string;
+  owner: string;
+}
+
+export interface MOPRollbackPlan {
+  scenario: string;
+  action: string;
+}
+
+export interface MOPParticipant {
+  name: string;
+  company: string;
+  designation: string;
+  contact?: string;
+}
+
 export interface MOPFormData {
-  // Project info
-  projectInfo: {
-    projectName: string;
-    projectNumber: string;
-    projectOwner: string;
-    mainService: string;
-    projectStatus: string;
-  };
-
-  // Contractor info
-  contractor: {
-    companyName: string;
-    contactPerson: string;
-    mobileNumber: string;
-    email: string;
-    lineManager: string;
-  };
-
-  // Readiness checklist
-  readinessChecklist: {
-    task: string;
-    assignee: string;
-    status: "Pending" | "Completed";
-  }[];
-
-  // Implementation steps
-  implementationSteps: {
-    step: string;
-    owner: string;
-  }[];
-
-  // Risk matrix (single risk block)
+  projectInfo: MOPProjectInfo;
+  contractor: MOPContractor;
+  readinessChecklist: MOPReadinessItem[];
+  implementationSteps: MOImplementationStep[];
+  rollbackPlans: MOPRollbackPlan[];
+  participants: MOPParticipant[];
   riskMatrix: MOPRiskMatrix;
-
-  // ✅ FIX FOR CURRENT ERROR
-  rollbackPlans: {
-    trigger: string;
-    action: string;
-    owner: string;
-  }[];
-
-  // Optional notes
-  additionalNotes?: string;
 }
