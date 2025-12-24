@@ -14,9 +14,15 @@ app.use(cors());
 app.use(express.json());
 
 /* ===============================
+   HEALTHCHECK (REQUIRED)
+================================ */
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok" });
+});
+
+/* ===============================
    ROUTES
 ================================ */
-
 app.use("/api/requests", requestsRouter);
 app.use("/api/settings", settingsRouter);
 app.use("/api/auth", authRouter);
@@ -25,10 +31,16 @@ app.use("/api/approvals", approvalsRouter);
 app.use("/api/reports", reportsRouter);
 
 /* ===============================
+   DEFAULT 404 FOR MISSING ROUTES
+================================ */
+app.use((req, res) => {
+  res.status(404).json({ message: "Not Found" });
+});
+
+/* ===============================
    START SERVER
 ================================ */
-
-const PORT = 4001;
+const PORT = process.env.PORT || 4001;
 
 app.listen(PORT, () => {
   console.log(`Centre3 API on http://localhost:${PORT}`);
