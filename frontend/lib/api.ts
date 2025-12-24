@@ -1,60 +1,64 @@
+// frontend/lib/api.ts
+
 const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001";
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "http://localhost:4001";
 
-async function api(
-  path: string,
-  options: RequestInit = {}
-) {
-  const token =
-    typeof window !== "undefined"
-      ? localStorage.getItem("token")
-      : null;
+// Read stored token (your key is "centre3_token")
+function getToken() {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("centre3_token"); 
+}
 
-  const res = await fetch(`${API_BASE}${path}`, {
+export async function apiFetch<T = any>(path: string, options: RequestInit = {}) {
+  // Normalize path to avoid "//"
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  const url = `${API_BASE}${cleanPath}`; 
+
+  const token = getToken();
+
+  const res = await fetch(url, {
     ...options,
     headers: {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(options.headers || {})
-    }
+      ...(options.headers || {}),
+    },
   });
 
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || res.statusText);
+    let message = res.statusText;
+
+    try {
+      const err = await res.json();
+      message = err?.message || message;
+    } catch {}
+
+    throw new Error(message);
   }
 
-  return res.json();
+  try {
+    return (await res.json()) as T;
+  } catch {
+    return null as T;
+  }
 }
 
-/* ============================
-   ✅ NAMED HELPERS (REQUIRED)
-   ============================ */
+// Helpers
+export const apiGet = <T = any>(path: string) => apiFetch<T>(path);
 
-export async function apiGet(path: string) {
-  return api(path, { method: "GET" });
-}
-
-export async function apiPost(path: string, body?: unknown) {
-  return api(path, {
+export const apiPost = <T = any>(path: string, body: any) =>
+  apiFetch<T>(path, {
     method: "POST",
-    body: body ? JSON.stringify(body) : undefined
+    body: JSON.stringify(body),
   });
-}
 
-export async function apiPut(path: string, body?: unknown) {
-  return api(path, {
-    method: "PUT",
-    body: body ? JSON.stringify(body) : undefined
+export const apiPatch = <T = any>(path: string, body: any) =>
+  apiFetch<T>(path, {
+    method: "PATCH",
+    body: JSON.stringify(body),
   });
-}
 
-export async function apiDelete(path: string) {
-  return api(path, { method: "DELETE" });
-}
-
-/* ============================
-   DEFAULT EXPORT (BACKWARD SAFE)
-   ============================ */
-
-export default api;
+export const apiDelete = <T = any>(path: string) =>
+  apiFetch<T>(path, {
+    method: "DELETE",
+  });
