@@ -51,7 +51,7 @@ export default function SubmitRequestPage() {
 
   async function submit() {
     try {
-      await apiPost(`/api/requests/${id}/submit`);
+      await apiPost(`/api/requests/${id}/submit`, {});
       router.push(`/requests/${id}`);
     } catch (e: any) {
       setError(e.message || "Submit failed");
