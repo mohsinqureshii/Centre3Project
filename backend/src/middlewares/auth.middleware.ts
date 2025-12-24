@@ -1,36 +1,22 @@
+// backend/middlewares/auth.middleware.ts
+
 import { Request, Response, NextFunction } from "express";
 
 /**
- * DEV AUTH MIDDLEWARE (TEMPORARY)
+ * ============================================================
+ *  DEV AUTH MIDDLEWARE  — TEMPORARY FOR FRONTEND INTEGRATION
+ * ============================================================
  *
- * This file intentionally exports BOTH:
- *  - authMiddleware
- *  - requireAuth
+ * ❗ This bypasses real authentication.
+ * ❗ It ALWAYS injects a SUPER_ADMIN dev user.
  *
- * So existing imports do NOT break.
- *
- * ✔ Allows any request with Authorization header
- * ✔ Injects SUPER_ADMIN user for dev
- *
- * 🚨 Replace with real JWT logic in Module 1
+ * Replace with real JWT logic later when login is implemented.
  */
 
-function baseAuth(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader) {
-    return res.status(401).json({
-      message: "Missing Authorization header",
-    });
-  }
-
-  // DEV USER CONTEXT
+function injectDevUser(req: Request, res: Response, next: NextFunction) {
   (req as any).user = {
     id: "dev-user",
+    email: "dev@centre3.local",
     role: "SUPER_ADMIN",
   };
 
@@ -45,16 +31,18 @@ export function authMiddleware(
   res: Response,
   next: NextFunction
 ) {
-  return baseAuth(req, res, next);
+  return injectDevUser(req, res, next);
 }
 
 /**
- * Used by older modules (reports, etc.)
+ * Used by older modules (reports, approvals, etc.)
  */
 export function requireAuth(
   req: Request,
   res: Response,
   next: NextFunction
 ) {
-  return baseAuth(req, res, next);
+  return injectDevUser(req, res, next);
 }
+
+export default authMiddleware;
