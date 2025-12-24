@@ -26,7 +26,6 @@ export interface Request {
   roomName?: string;
 
   visitors: Visitor[];
-
   createdAt: string;
 }
 
@@ -36,6 +35,7 @@ export interface WizardState {
   step: number;
   completed: boolean;
   mop?: MOPFormData;
+  mvp?: MVPFormData;
 }
 
 // ================= MOP (Method of Procedure) =================
@@ -97,4 +97,30 @@ export interface MOPFormData {
   rollbackPlans: MOPRollbackPlan[];
   participants: MOPParticipant[];
   riskMatrix: MOPRiskMatrix;
+}
+
+// ================= MVP (Material / Vehicle Permit) =================
+
+export interface MVPVehicle {
+  vehicleNumber: string;
+  driverName: string;
+  licenseNumber: string;
+}
+
+export interface MVPMaterial {
+  materialName: string;
+  quantity: string;
+  remarks?: string;
+}
+
+export interface MVPFormData {
+  requesterName: string;
+  department: string;
+  purpose: string;
+  visitDate: string;
+
+  vehicles: MVPVehicle[];
+  materials: MVPMaterial[];
+
+  remarks?: string;
 }
