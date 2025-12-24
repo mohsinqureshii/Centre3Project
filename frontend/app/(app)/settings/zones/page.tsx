@@ -1,214 +1,69 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import api from "@/lib/api";
-
-type Location = {
-  id: string;
-  siteName: string;
-};
+import { useEffect, useState } from 'react';
+import { apiGet } from '@/lib/api';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 type Zone = {
   id: string;
   name: string;
-  code?: string;
-  isLockable: boolean;
-  location: {
-    siteName: string;
-  };
+  locationId: string;
 };
 
 export default function ZonesPage() {
   const [zones, setZones] = useState<Zone[]>([]);
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const [form, setForm] = useState({
-    locationId: "",
-    name: "",
-    code: "",
-    isLockable: true,
-  });
-
-  /* ===========================
-     LOAD DATA (ONCE)
-  =========================== */
-  useEffect(() => {
-    async function load() {
-      try {
-        const zonesRes = await api.get("/settings/zones");
-        const locationsRes = await api.get("/settings/locations");
-
-        // 🔒 FORCE ARRAY (NO GUESSING)
-        const locationData: Location[] = Array.isArray(locationsRes.data)
-          ? locationsRes.data
-          : [];
-
-        setZones(zonesRes.data || []);
-        setLocations(locationData);
-      } catch (err) {
-        console.error("LOAD FAILED:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    load();
-  }, []);
-
-  /* ===========================
-     CREATE ZONE
-  =========================== */
-  async function createZone() {
-    if (!form.locationId || !form.name) {
-      alert("Location and Zone name required");
-      return;
-    }
+  async function load() {
+    setLoading(true);
+    setError(null);
 
     try {
-      const res = await api.post("/settings/zones", form);
-      setZones((prev) => [...prev, res.data]);
-      setShowModal(false);
-      setForm({
-        locationId: "",
-        name: "",
-        code: "",
-        isLockable: true,
-      });
-    } catch (err) {
-      console.error("CREATE FAILED:", err);
+      const [zonesRes, locationsRes] = await Promise.all([
+        apiGet('/settings/zones'),
+        apiGet('/settings/locations'),
+      ]);
+
+      // Ensure array safety
+      setZones(Array.isArray(zonesRes) ? zonesRes : []);
+    } catch (e: any) {
+      setError(e.message || 'Failed to load zones');
+    } finally {
+      setLoading(false);
     }
   }
 
-  /* ===========================
-     UI
-  =========================== */
+  useEffect(() => {
+    load();
+  }, []);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Zones</h1>
-        <button
-          onClick={() => setShowModal(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded"
-        >
-          Add Zone
-        </button>
+        <h1 className="text-2xl font-semibold">Zones</h1>
+        <Button onClick={load} disabled={loading}>
+          Refresh
+        </Button>
       </div>
 
-      <div className="bg-white rounded shadow">
-        <table className="w-full text-sm">
-          <thead className="border-b">
-            <tr>
-              <th className="p-3 text-left">Zone Name</th>
-              <th className="p-3 text-left">Code</th>
-              <th className="p-3 text-left">Location</th>
-              <th className="p-3 text-left">Lockable</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading && (
-              <tr>
-                <td colSpan={4} className="p-4 text-center text-gray-500">
-                  Loading zones...
-                </td>
-              </tr>
-            )}
+      {error && <div className="text-sm text-red-400">{error}</div>}
 
-            {!loading && zones.length === 0 && (
-              <tr>
-                <td colSpan={4} className="p-4 text-center text-gray-500">
-                  No zones found
-                </td>
-              </tr>
-            )}
+      <div className="grid gap-3">
+        {zones.map((z) => (
+          <Card key={z.id}>
+            <CardHeader>{z.name}</CardHeader>
+            <CardContent className="text-sm text-zinc-400">
+              Location ID: {z.locationId}
+            </CardContent>
+          </Card>
+        ))}
 
-            {zones.map((z) => (
-              <tr key={z.id} className="border-t">
-                <td className="p-3">{z.name}</td>
-                <td className="p-3">{z.code || "-"}</td>
-                <td className="p-3">{z.location.siteName}</td>
-                <td className="p-3">{z.isLockable ? "Yes" : "No"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {!loading && zones.length === 0 && (
+          <div className="text-sm text-zinc-400">No zones found.</div>
+        )}
       </div>
-
-      {/* ===========================
-         MODAL
-      =========================== */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white w-[420px] rounded p-6 space-y-4">
-            <h2 className="font-semibold text-lg">Create Zone</h2>
-
-            <select
-              className="w-full border rounded px-3 py-2"
-              value={form.locationId}
-              onChange={(e) =>
-                setForm({ ...form, locationId: e.target.value })
-              }
-            >
-              <option value="">Select location</option>
-
-              {locations.length === 0 && (
-                <option disabled>No locations found</option>
-              )}
-
-              {locations.map((l) => (
-                <option key={l.id} value={l.id}>
-                  {l.siteName}
-                </option>
-              ))}
-            </select>
-
-            <input
-              className="w-full border rounded px-3 py-2"
-              placeholder="Zone name"
-              value={form.name}
-              onChange={(e) =>
-                setForm({ ...form, name: e.target.value })
-              }
-            />
-
-            <input
-              className="w-full border rounded px-3 py-2"
-              placeholder="Code (optional)"
-              value={form.code}
-              onChange={(e) =>
-                setForm({ ...form, code: e.target.value })
-              }
-            />
-
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={form.isLockable}
-                onChange={(e) =>
-                  setForm({ ...form, isLockable: e.target.checked })
-                }
-              />
-              Lockable
-            </label>
-
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                onClick={() => setShowModal(false)}
-                className="px-4 py-2 border rounded"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={createZone}
-                className="px-4 py-2 bg-blue-600 text-white rounded"
-              >
-                Create
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

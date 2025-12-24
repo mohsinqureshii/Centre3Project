@@ -1,10 +1,12 @@
 'use client';
+
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+
 import { apiGet, apiPost } from "../../../lib/api";
 import { Card, CardHeader, CardContent } from "../../../components/ui/card";
-import { Button } from "../../../components/ui/button";
 import { Badge } from "../../../components/ui/badge";
+import { Button } from "../../../components/ui/button";
 import { Dialog, DialogTitle, DialogFooter } from "../../../components/ui/dialog";
 import { Input } from "../../../components/ui/input";
 
@@ -53,6 +55,7 @@ export default function ApprovalsInbox() {
 
   async function submitAction() {
     if (!selected) return;
+
     try {
       if (action === "approve") {
         await apiPost(`/api/approvals/requests/${selected.requestId}/approve`, {
@@ -67,6 +70,7 @@ export default function ApprovalsInbox() {
           comment,
         });
       }
+
       setOpen(false);
       await refresh();
       alert("Action completed.");
@@ -108,6 +112,7 @@ export default function ApprovalsInbox() {
               </div>
               <Badge>{i.status}</Badge>
             </CardHeader>
+
             <CardContent className="flex items-center justify-between">
               <Link
                 className="text-sm text-zinc-200 underline"
@@ -115,20 +120,32 @@ export default function ApprovalsInbox() {
               >
                 View request
               </Link>
+
               <div className="flex gap-2">
-                <Button onClick={() => openModal(i, "approve")}>Approve</Button>
-                <Button variant="destructive" onClick={() => openModal(i, "reject")}>
+                <Button onClick={() => openModal(i, "approve")}>
+                  Approve
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => openModal(i, "reject")}
+                >
                   Reject
                 </Button>
-                <Button variant="secondary" onClick={() => openModal(i, "return")}>
+                <Button
+                  variant="secondary"
+                  onClick={() => openModal(i, "return")}
+                >
                   Return
                 </Button>
               </div>
             </CardContent>
           </Card>
         ))}
+
         {items.length === 0 && (
-          <div className="text-zinc-400 text-sm">No items pending for your role.</div>
+          <div className="text-zinc-400 text-sm">
+            No items pending for your role.
+          </div>
         )}
       </div>
 
@@ -138,13 +155,16 @@ export default function ApprovalsInbox() {
         {selected && (
           <div className="text-sm text-zinc-300 space-y-1">
             <div>
-              <span className="text-zinc-400">Request:</span> {selected.requestNo}
+              <span className="text-zinc-400">Request:</span>{" "}
+              {selected.requestNo}
             </div>
             <div>
-              <span className="text-zinc-400">Type:</span> {selected.requestType}
+              <span className="text-zinc-400">Type:</span>{" "}
+              {selected.requestType}
             </div>
             <div>
-              <span className="text-zinc-400">Stage:</span> {selected.stageName}
+              <span className="text-zinc-400">Stage:</span>{" "}
+              {selected.stageName}
             </div>
           </div>
         )}
@@ -153,7 +173,11 @@ export default function ApprovalsInbox() {
           <div className="text-xs text-zinc-400 mb-1">
             Comment {action === "approve" ? "(optional)" : "(required)"}
           </div>
-          <Input value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Type comment..." />
+          <Input
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="Type comment..."
+          />
         </div>
 
         <DialogFooter>

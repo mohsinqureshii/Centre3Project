@@ -27,20 +27,47 @@ export interface Request {
   roomName?: string;
 
   visitors: Visitor[];
-
   createdAt: string;
 }
 
 // =====================
-// Wizard
+// Wizard / Forms
 // =====================
-export interface WizardState {
+export type RequestType =
+  | "METHOD_OF_PROCEDURE"
+  | "MATERIAL_VEHICLE_PERMIT"
+  | "WORK_PERMIT";
+
+export type AttachmentType =
+  | "MOP_DOC"
+  | "MVP_DOC"
+  | "WP_DOC";
+
+export interface RequestorInfo {
+  fullName: string;
+  email: string;
+  phone: string;
+  company: string;
+}
+
+export interface Attachment {
+  type: AttachmentType;
+  name: string;
+  url?: string;
+}
+
+export type WizardState = {
   step: number;
   completed: boolean;
 
+  requestType: RequestType;
+  requestor: RequestorInfo;
+  attachments: Attachment[];
+
   mop?: MOPFormData;
   mvp?: MVPFormData;
-}
+  wp?: WPFormData;
+};
 
 // =====================
 // MOP (Method of Procedure)
@@ -99,15 +126,17 @@ export interface MOPFormData {
 }
 
 // =====================
-// MVP (Material Vehicle Permit)
+// MVP (Material / Vehicle Permit)
 // =====================
-export type MVPDecisionType =
-  | "WITH_VEHICLE"
-  | "WITHOUT_VEHICLE";
+export type MVPDecisionType = "WITH_VEHICLE" | "WITHOUT_VEHICLE";
+export type MVPMovementType = "ENTRY" | "EXIT";
 
-export type MVPMovementType =
-  | "ENTRY"
-  | "EXIT";
+export interface MVPVehicle {
+  plate: string;
+  vehicleType: string;
+  driverName: string;
+  driverId: string;
+}
 
 export interface MVPFormData {
   decisionType: MVPDecisionType;
@@ -121,9 +150,28 @@ export interface MVPFormData {
     idNumber: string;
   };
 
+  vehicle?: MVPVehicle;
+
   materials: {
     description: string;
     quantity: number;
     reason: string;
   }[];
+}
+
+// =====================
+// WP (Work Permit)
+// =====================
+export type WPImpact = "Minor" | "Moderate" | "Major";
+
+export interface WPRisk {
+  description: string;
+  impact: WPImpact;
+  control: string;
+}
+
+export interface WPFormData {
+  cabinets: string;
+  methodStatements: { description: string }[];
+  risks: WPRisk[];
 }
