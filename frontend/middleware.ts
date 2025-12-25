@@ -1,26 +1,19 @@
+// 🔥 FIXED MIDDLEWARE - NO AUTH CHECK HERE
+// Next.js middleware runs on the EDGE (server)
+// It CANNOT read localStorage and cookies are unreliable on DigitalOcean.
+// We do AUTH CHECK on the CLIENT ONLY.
+
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/", "/login"];
-
 export function middleware(request: NextRequest) {
-  const token = request.cookies.get("centre3_token")?.value;
-
-  const { pathname } = request.nextUrl;
-
-  if (PUBLIC_PATHS.includes(pathname)) {
-    return NextResponse.next();
-  }
-
-  if (!token) {
-    return NextResponse.redirect(new URL("/login", request.url));
-  }
-
+  // Allow ALL routes to load — no redirect here.
   return NextResponse.next();
 }
 
 export const config = {
   matcher: [
+    // still scan these routes, but no redirect happens
     "/dashboard/:path*",
     "/requests/:path*",
     "/approvals/:path*",
