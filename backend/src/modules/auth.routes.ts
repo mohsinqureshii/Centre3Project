@@ -20,15 +20,19 @@ router.post("/login", async (req, res) => {
     if (!valid)
       return res.status(401).json({ message: "Invalid email or password" });
 
-    const token = jwt.sign(
-      {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
+// Create JWT token safely
+const secret = process.env.JWT_SECRET || "fallback_secret";
+
+const token = jwt.sign(
+  {
+    id: user.id,
+    email: user.email,
+    role: user.role,
+  },
+  secret,
+  { expiresIn: "1d" }
+);
+
 
     // Send HttpOnly cookie
     res.cookie("centre3_token", token, {
