@@ -1,18 +1,24 @@
 // frontend/lib/api.ts
 
+// Remove trailing slash from base URL
 const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "http://localhost:4001";
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") ||
+  "http://localhost:4001";
 
-// Read stored token (your key is "centre3_token")
+// Read stored token
 function getToken() {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem("centre3_token"); 
+  return localStorage.getItem("centre3_token");
 }
 
-export async function apiFetch<T = any>(path: string, options: RequestInit = {}) {
-  // Normalize path to avoid "//"
+// Main fetch wrapper
+export async function apiFetch<T = any>(
+  path: string,
+  options: RequestInit = {}
+) {
+  // Ensure single slash only
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
-  const url = `${API_BASE}${cleanPath}`; 
+  const url = `${API_BASE}${cleanPath}`;
 
   const token = getToken();
 
@@ -25,6 +31,7 @@ export async function apiFetch<T = any>(path: string, options: RequestInit = {})
     },
   });
 
+  // Handle failed requests
   if (!res.ok) {
     let message = res.statusText;
 
