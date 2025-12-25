@@ -10,28 +10,26 @@ const router = Router();
 router.get("/", authMiddleware, async (req, res) => {
   try {
     const zones = await prisma.zone.findMany({
-      include: { location: true },
+      include: {
+        location: true,
+      },
       orderBy: { createdAt: "desc" },
     });
 
-    const formatted = zones.map(z => ({
+    // FIX: Location does NOT have `.name` → return `siteName` instead
+    const formatted = zones.map((z) => ({
       id: z.id,
       name: z.name,
       code: z.code,
       isLockable: z.isLockable,
       locationId: z.locationId,
-      locationName: z.location?.siteName || z.location?.name || "Unknown",
-      createdAt: z.createdAt,
+      locationName: z.location?.siteName || "-", // FIXED
     }));
 
     res.json(formatted);
-
   } catch (e) {
-    console.error("ZONE ERROR:", e);
-    return res.status(500).json({
-      message: "Failed to load zones",
-      error: String(e),
-    });
+    console.error("ZONE LIST ERROR:", e);
+    res.status(500).json({ message: "Failed to load zones" });
   }
 });
 
@@ -56,19 +54,19 @@ router.post("/", authMiddleware, async (req, res) => {
       include: { location: true },
     });
 
-    return res.json({
+    const result = {
       id: zone.id,
       name: zone.name,
       code: zone.code,
       isLockable: zone.isLockable,
       locationId: zone.locationId,
-      locationName: zone.location?.siteName || zone.location?.name || "Unknown",
-      createdAt: zone.createdAt,
-    });
+      locationName: zone.location?.siteName || "-", // FIXED
+    };
 
+    res.json(result);
   } catch (e) {
     console.error("ZONE CREATE ERROR:", e);
-    return res.status(500).json({ message: "Failed to create zone" });
+    res.status(500).json({ message: "Failed to create zone" });
   }
 });
 
