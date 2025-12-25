@@ -13,20 +13,26 @@ router.get("/", authMiddleware, async (req, res) => {
       include: { location: true },
       orderBy: { createdAt: "desc" },
     });
-    res.json(zones);
-  } 
-  
-catch (e) {
-  console.error("ZONE ERROR:", e);
-  return res.status(500).json({
-    message: "Failed to create zone",
-    error: String(e),
-  });
-}
 
+    const formatted = zones.map(z => ({
+      id: z.id,
+      name: z.name,
+      code: z.code,
+      isLockable: z.isLockable,
+      locationId: z.locationId,
+      locationName: z.location?.siteName || z.location?.name || "Unknown",
+      createdAt: z.createdAt,
+    }));
 
+    res.json(formatted);
 
-
+  } catch (e) {
+    console.error("ZONE ERROR:", e);
+    return res.status(500).json({
+      message: "Failed to load zones",
+      error: String(e),
+    });
+  }
 });
 
 /**
@@ -47,11 +53,22 @@ router.post("/", authMiddleware, async (req, res) => {
         code,
         isLockable: isLockable ?? true,
       },
+      include: { location: true },
     });
 
-    res.json(zone);
+    return res.json({
+      id: zone.id,
+      name: zone.name,
+      code: zone.code,
+      isLockable: zone.isLockable,
+      locationId: zone.locationId,
+      locationName: zone.location?.siteName || zone.location?.name || "Unknown",
+      createdAt: zone.createdAt,
+    });
+
   } catch (e) {
-    res.status(500).json({ message: "Failed to create zone" });
+    console.error("ZONE CREATE ERROR:", e);
+    return res.status(500).json({ message: "Failed to create zone" });
   }
 });
 

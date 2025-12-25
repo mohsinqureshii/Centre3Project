@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 type Zone = {
   id: string;
   name: string;
-  locationName?: string;
+  locationName: string;
 };
 
 export default function ZonesPage() {
@@ -41,12 +41,17 @@ export default function ZonesPage() {
         <Button onClick={load}>Refresh</Button>
       </div>
 
-      {error && <div className="text-red-400 text-sm">{error}</div>}
+      {error && <div className="text-red-500 text-sm">{error}</div>}
 
       <Card>
-        <CardHeader />
+        <CardHeader>
+          <Button className="mt-2 w-fit">Add Zone</Button>
+        </CardHeader>
+
         <CardContent>
-          {loading && <div className="text-sm text-zinc-400">Loading zones…</div>}
+          {loading && (
+            <div className="text-sm text-zinc-400">Loading zones…</div>
+          )}
 
           {!loading && zones.length === 0 && (
             <div className="text-sm text-zinc-400">No zones found.</div>
@@ -64,7 +69,7 @@ export default function ZonesPage() {
                 {zones.map((z) => (
                   <tr key={z.id} className="border-b last:border-0">
                     <td className="py-2">{z.name}</td>
-                    <td className="py-2">{z.locationName || "-"}</td>
+                    <td className="py-2">{z.locationName}</td>
                   </tr>
                 ))}
               </tbody>
