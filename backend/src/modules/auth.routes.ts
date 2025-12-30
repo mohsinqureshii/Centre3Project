@@ -79,7 +79,7 @@ router.post("/login", async (req: Request, res: Response) => {
     res.cookie("centre3_token", token, {
       httpOnly: true,
       secure: true, // true in production (HTTPS)
-      sameSite: "lax",
+      sameSite: "none",
       path: "/",                 // 🔥 REQUIRED
       maxAge: 24 * 60 * 60 * 1000,
     });
