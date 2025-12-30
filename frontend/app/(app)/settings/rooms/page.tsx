@@ -193,8 +193,9 @@ export default function RoomsPage() {
                   const name = r.name || r.roomName || "—";
                   const code = r.code || r.roomCode || "—";
                   const loc = r.locationName || (r.locationId ? r.locationId : "—");
-                  const zone = r.zoneName || (r.zoneId ? r.zoneId : "—");
+                  const zone = r.zoneName;
                   const active = r.isActive !== false;
+                  console.log(zone)
 
                   return (
                     <tr key={r.id} className="border-b last:border-0">

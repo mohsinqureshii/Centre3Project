@@ -2,6 +2,46 @@ import prisma from "../../prisma.js";
 import { Request, Response } from "express";
 
 /**
+ * POST /api/requests
+ * Create new draft request
+ */
+export async function createRequestDraft(req: Request, res: Response) {
+  try {
+    const body = req.body || {};
+const requestNo = `REQ-${Date.now()}`;
+
+    const draft = await prisma.accessRequest.create({
+      data: {
+        requestNo,
+        status: "DRAFT",
+
+        // REQUIRED CORE FIELDS
+        requestType: body.requestType,
+        purpose: body.purpose,
+        requestorDepartment: body.requestorDepartment ?? null,
+        vip: body.vip ?? false,
+
+        // TIME WINDOW
+        startAt: new Date(body.startAt),
+        endAt: new Date(body.endAt),
+
+        // LOCATION (OPTIONAL INITIALLY)
+        zoneId: body.zoneId ?? null,
+        roomId: body.roomId ?? null,
+      },
+    });
+
+    res.status(201).json(draft);
+  } catch (err: any) {
+    console.error(err);
+    res.status(500).json({
+      message: "Failed to create request draft",
+      error: err.message,
+    });
+  }
+}
+
+/**
  * PATCH /api/requests/:id
  * Update draft request
  */
@@ -19,14 +59,13 @@ export async function updateRequestDraft(req: Request, res: Response) {
       return res.status(404).json({ message: "Request not found" });
     }
 
-    // 🚨 HARD LOCK — BRD ENFORCEMENT
+    // 🚨 HARD LOCK
     if (existing.status !== "DRAFT") {
       return res.status(409).json({
         message: "Submitted requests cannot be modified",
       });
     }
 
-    // Update main request fields
     const updated = await prisma.accessRequest.update({
       where: { id },
       data: {
@@ -41,7 +80,7 @@ export async function updateRequestDraft(req: Request, res: Response) {
       },
     });
 
-    // Replace visitors if provided
+    // VISITORS
     if (Array.isArray(body.visitors)) {
       await prisma.requestVisitor.deleteMany({ where: { requestId: id } });
 
@@ -61,7 +100,7 @@ export async function updateRequestDraft(req: Request, res: Response) {
       }
     }
 
-    // Replace materials if provided (MVP)
+    // MATERIALS
     if (Array.isArray(body.materials)) {
       await prisma.materialItem.deleteMany({ where: { requestId: id } });
 
@@ -87,7 +126,10 @@ export async function updateRequestDraft(req: Request, res: Response) {
     res.json(full);
   } catch (err: any) {
     console.error(err);
-    res.status(500).json({ message: "Failed to update request", error: err.message });
+    res.status(500).json({
+      message: "Failed to update request",
+      error: err.message,
+    });
   }
 }
 
@@ -105,6 +147,8 @@ export async function submitRequestWithValidation(req: Request, res: Response) {
         visitors: true,
         materials: true,
         attachments: true,
+                zone: true,    // If you need zone details
+        room: true,    // If you need room details
       },
     });
 
@@ -113,25 +157,33 @@ export async function submitRequestWithValidation(req: Request, res: Response) {
     }
 
     if (r.status !== "DRAFT") {
-      return res.status(409).json({ message: "Only draft requests can be submitted" });
+      return res
+        .status(409)
+        .json({ message: "Only draft requests can be submitted" });
     }
 
-    // ===============================
-    // FINAL VALIDATIONS (MODULE-3)
-    // ===============================
-
-    // 1️⃣ Visitors mandatory
+    // 1️⃣ Visitors required
     if (!r.visitors || r.visitors.length === 0) {
-      return res.status(400).json({ message: "At least one visitor is required" });
+      return res
+        .status(400)
+        .json({ message: "At least one visitor is required" });
     }
 
+    if (!r.startAt || !r.endAt) {
+  throw new Error("Start or End date missing");
+}
     // 2️⃣ Duration limits
     const durationMs = r.endAt.getTime() - r.startAt.getTime();
     const days = durationMs / (1000 * 60 * 60 * 24);
 
     if (r.requestType === "TEMPORARY_ENTRY_PERMISSION" && days > 180) {
-      return res.status(400).json({ message: "TEP cannot exceed 6 months" });
+      return res
+        .status(400)
+        .json({ message: "TEP cannot exceed 6 months" });
     }
+if (!r.requestType) {
+  throw new Error("Request type missing");
+}
 
     if (
       ["WORK_PERMIT", "METHOD_OF_PROCEDURE", "MATERIAL_VEHICLE_PERMIT"].includes(
@@ -139,7 +191,9 @@ export async function submitRequestWithValidation(req: Request, res: Response) {
       ) &&
       days > 14
     ) {
-      return res.status(400).json({ message: "Request duration exceeds limit" });
+      return res
+        .status(400)
+        .json({ message: "Request duration exceeds limit" });
     }
 
     // 3️⃣ MVP requires materials
@@ -147,10 +201,12 @@ export async function submitRequestWithValidation(req: Request, res: Response) {
       r.requestType === "MATERIAL_VEHICLE_PERMIT" &&
       (!r.materials || r.materials.length === 0)
     ) {
-      return res.status(400).json({ message: "At least one material is required" });
+      return res
+        .status(400)
+        .json({ message: "At least one material is required" });
     }
 
-    // 4️⃣ Required attachments per type
+    // 4️⃣ Required attachments
     const requiredAttachmentByType: Record<string, string> = {
       ADMIN_VISIT: "VISITOR_ID",
       TEMPORARY_ENTRY_PERMISSION: "VISITOR_ID",
@@ -158,6 +214,9 @@ export async function submitRequestWithValidation(req: Request, res: Response) {
       METHOD_OF_PROCEDURE: "MOP_DOC",
       MATERIAL_VEHICLE_PERMIT: "GATE_PASS",
     };
+if (!r.requestType) {
+  throw new Error("Request type missing");
+}
 
     const requiredType = requiredAttachmentByType[r.requestType];
     if (requiredType) {
@@ -169,7 +228,6 @@ export async function submitRequestWithValidation(req: Request, res: Response) {
       }
     }
 
-    // ✅ SUBMIT
     const updated = await prisma.accessRequest.update({
       where: { id },
       data: { status: "SUBMITTED" },
@@ -178,6 +236,9 @@ export async function submitRequestWithValidation(req: Request, res: Response) {
     res.json({ ok: true, requestId: id, status: updated.status });
   } catch (err: any) {
     console.error(err);
-    res.status(500).json({ message: "Submit failed", error: err.message });
+    res.status(500).json({
+      message: "Submit failed",
+      error: err.message,
+    });
   }
 }

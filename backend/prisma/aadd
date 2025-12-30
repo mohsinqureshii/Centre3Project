@@ -79,9 +79,10 @@ enum CredentialStatus {
 }
 
 // =======================
-// USER
+// MODELS
 // =======================
 
+// USER
 model User {
   id           String   @id @default(uuid())
   userCode     String   @unique @default(uuid())
@@ -93,17 +94,14 @@ model User {
   userType     UserType @default(INTERNAL)
   isActive     Boolean  @default(true)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
   approvals ApprovalLog[]
   auditLogs AuditLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-// =======================
 // LOCATION / ZONE / ROOM
-// =======================
-
 model Location {
   id       String @id @default(uuid())
   country  String
@@ -111,11 +109,10 @@ model Location {
   city     String
   siteCode String
   siteName String
-
   isActive Boolean @default(true)
 
-  zones Zone[]
-  rooms Room[]
+  zones          Zone[]
+  rooms          Room[]
   accessRequests AccessRequest[]
 
   createdAt DateTime @default(now())
@@ -134,7 +131,6 @@ model Zone {
   rooms          Room[]
   lockEvents     ZoneLockEvent[]
   accessRequests AccessRequest[]
-  allowedInCredentials Credential[] @relation("CredentialZones")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -147,18 +143,15 @@ model Room {
   name       String
   code       String?
 
-  zone           Zone            @relation(fields: [zoneId], references: [id])
-  location       Location        @relation(fields: [locationId], references: [id])
+  zone           Zone     @relation(fields: [zoneId], references: [id])
+  location       Location @relation(fields: [locationId], references: [id])
   accessRequests AccessRequest[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-// =======================
 // ACTIVITIES / PROCESSES
-// =======================
-
 model ActivityCategory {
   id         String     @id @default(uuid())
   name       String
@@ -184,7 +177,7 @@ model ProcessDefinition {
 
   stages         ProcessStage[]
   activities     Activity[]
-  accessRequests AccessRequest[] @relation("ProcessAccessRequests")
+  accessRequests AccessRequest[]
 }
 
 model ProcessStage {
@@ -199,45 +192,39 @@ model ProcessStage {
   process ProcessDefinition @relation(fields: [processId], references: [id])
 }
 
-// =======================
 // ACCESS REQUEST
-// =======================
-
 model AccessRequest {
   id          String        @id @default(uuid())
   requestNo   String        @unique
-  requestType RequestType?       // ✅ optional for draft
+  requestType RequestType
   status      RequestStatus @default(DRAFT)
 
-  requestorName        String?
-  requestorEmail       String?
-  requestorPhone       String?
-  requestorCompany     String?
+  requestorName        String
+  requestorEmail       String
+  requestorPhone       String
+  requestorCompany     String
   requestorIdNumber    String?
   requestorNationality String?
   requestorDepartment  String?
 
-  locationId String?
+  locationId String
   zoneId     String?
   roomId     String?
-  processId  String?
 
-  startAt DateTime?
-  endAt   DateTime?
+  startAt DateTime
+  endAt   DateTime
 
   vip      Boolean @default(false)
   purpose  String?
   comments String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
   activityId String?
+  processId  String?
 
-  location Location? @relation(fields: [locationId], references: [id])
-  zone     Zone?     @relation(fields: [zoneId], references: [id])
-  room     Room?     @relation(fields: [roomId], references: [id])
-  process  ProcessDefinition? @relation("ProcessAccessRequests", fields: [processId], references: [id])
+  location Location           @relation(fields: [locationId], references: [id])
+  zone     Zone?              @relation(fields: [zoneId], references: [id])
+  room     Room?              @relation(fields: [roomId], references: [id])
+  process  ProcessDefinition? @relation(fields: [processId], references: [id])
 
   visitors       RequestVisitor[]
   attachments    Attachment[]
@@ -246,13 +233,12 @@ model AccessRequest {
   checkEvents    CheckEvent[]
   materials      MaterialItem[]
   credentials    Credential[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-
-// =======================
 // REQUEST DETAILS
-// =======================
-
 model RequestVisitor {
   id        String @id @default(uuid())
   requestId String
@@ -335,10 +321,7 @@ model MaterialItem {
   request AccessRequest @relation(fields: [requestId], references: [id])
 }
 
-// =======================
 // SECURITY / ACCESS
-// =======================
-
 model SecurityAlert {
   id          String   @id @default(uuid())
   title       String
@@ -368,10 +351,7 @@ model ZoneLockEvent {
   zone Zone @relation(fields: [zoneId], references: [id])
 }
 
-// =======================
 // CREDENTIALS
-// =======================
-
 model Credential {
   id          String           @id @default(uuid())
   requestId   String
@@ -386,17 +366,14 @@ model Credential {
   validFrom  DateTime
   validUntil DateTime
 
-  request      AccessRequest @relation(fields: [requestId], references: [id])
-  allowedZones Zone[]        @relation("CredentialZones")
+  allowedZones Json?  // renamed for Prisma compatibility
+  issuedAt     DateTime  @default(now())
+  revokedAt    DateTime?
 
-  issuedAt  DateTime @default(now())
-  revokedAt DateTime?
+  request AccessRequest @relation(fields: [requestId], references: [id])
 }
 
-// =======================
 // AUDIT
-// =======================
-
 model AuditLog {
   id       String  @id @default(uuid())
   actorId  String?
@@ -409,3 +386,4 @@ model AuditLog {
 
   actor User? @relation(fields: [actorId], references: [id])
 }
+

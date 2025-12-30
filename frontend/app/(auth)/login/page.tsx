@@ -1,9 +1,6 @@
-// trigger redeploy
-
-
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
@@ -14,39 +11,35 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    // If cookie already exists → redirect
-    if (document.cookie.includes("centre3_token=")) {
-      router.replace("/dashboard");
+  async function handleLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/login`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+          credentials: "include", // Important for cookies
+        }
+      );
+
+      if (!res.ok) throw new Error("Invalid credentials");
+
+      // Optionally check backend response
+      const data = await res.json();
+      if (!data.success) throw new Error("Login failed");
+
+      router.push("/dashboard"); // redirect after login
+    } catch (err: any) {
+      setError(err.message || "Login failed");
+    } finally {
+      setLoading(false);
     }
-  }, [router]);
-
-async function handleLogin(e: React.FormEvent) {
-  e.preventDefault();
-  setLoading(true);
-  setError("");
-
-  try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-        credentials: "include", // IMPORTANT
-      }
-    );
-
-    if (!res.ok) throw new Error("Invalid credentials");
-
-    router.replace("/dashboard");
-  } catch (err: any) {
-    setError(err.message || "Login failed");
-  } finally {
-    setLoading(false);
   }
-}
-
 
   return (
     <div className="min-h-screen grid grid-cols-1 md:grid-cols-2">
@@ -64,9 +57,7 @@ async function handleLogin(e: React.FormEvent) {
         >
           <h2 className="text-xl font-semibold mb-1">Login</h2>
 
-          {error && (
-            <div className="text-red-600 text-sm mb-3">{error}</div>
-          )}
+          {error && <div className="text-red-600 text-sm mb-3">{error}</div>}
 
           <label className="block text-sm mb-1">Email</label>
           <input

@@ -16,7 +16,7 @@ export default function RequestDetailsPage({ params }: { params: { id: string } 
 
     async function load() {
       try {
-        const all = await apiGet('/requests');
+        const all = await apiGet('/api/requests');
 
         if (!Array.isArray(all)) {
           throw new Error('Invalid response from /requests');
@@ -85,11 +85,13 @@ export default function RequestDetailsPage({ params }: { params: { id: string } 
       </div>
 
       <div>
-        <h2 className="font-semibold">Location</h2>
-        <p>
-          {request.locationName || '-'} / {request.zoneName || '-'} /{' '}
-          {request.roomName || '-'}
-        </p>
+     <h2 className="font-semibold">Location</h2>
+<p>
+  {request.location
+    ? `${request.location.siteName} / ${request.zone?.name ?? '-'} / ${request.room?.name ?? '-'}`
+    : '- / - / -'}
+</p>
+
       </div>
 
       <div>

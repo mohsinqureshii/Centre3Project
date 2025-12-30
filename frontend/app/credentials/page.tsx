@@ -1,60 +1,71 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { apiGet } from "@/lib/api";
 
 type Credential = {
   id: string;
-  requestId: string;
   visitorName: string;
   type: string;
   status: string;
-  credentialNumber?: string | null;
-  validFrom: string;
-  validUntil: string;
+  zoneName?: string;
+  allowedZoneNames: string[];
 };
 
 export default function CredentialsPage() {
-  const [rows, setRows] = useState<Credential[]>([]);
+  const [credentials, setCredentials] = useState<Credential[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/credentials")
-      .then(r => r.json())
-      .then(setRows)
-      .catch(() => setRows([]));
+    async function load() {
+      try {
+        const res = await apiGet("/api/credentials");
+        setCredentials(res);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    load();
   }, []);
 
-  return (
-    <div style={{ padding: 24 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700 }}>Credentials</h1>
-        <a href="/credentials/new" style={{ padding: "8px 12px", border: "1px solid #ddd", borderRadius: 8 }}>Issue Credential</a>
-      </div>
+  if (loading) return <div>Loading credentials...</div>;
 
-      <div style={{ marginTop: 16, border: "1px solid #eee", borderRadius: 12, overflow: "hidden" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ background: "#fafafa" }}>
-              {["Visitor","Type","Status","Badge","Valid Until"].map(h => (
-                <th key={h} style={{ textAlign: "left", padding: 10, borderBottom: "1px solid #eee" }}>{h}</th>
-              ))}
+  return (
+    <div className="p-6">
+      <h1 className="text-xl font-semibold mb-4">Credentials</h1>
+      <table className="w-full text-left border">
+        <thead className="bg-gray-100">
+          <tr>
+            <th className="p-2">Visitor Name</th>
+            <th className="p-2">Type</th>
+            <th className="p-2">Status</th>
+            <th className="p-2">Zone</th>
+            <th className="p-2">Allowed Zones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {credentials.length === 0 && (
+            <tr>
+              <td colSpan={5} className="p-4 text-center">
+                No credentials found
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {rows.map(r => (
-              <tr key={r.id}>
-                <td style={{ padding: 10, borderBottom: "1px solid #f1f1f1" }}><a href={`/credentials/${r.id}`}>{r.visitorName}</a></td>
-                <td style={{ padding: 10, borderBottom: "1px solid #f1f1f1" }}>{r.type}</td>
-                <td style={{ padding: 10, borderBottom: "1px solid #f1f1f1" }}>{r.status}</td>
-                <td style={{ padding: 10, borderBottom: "1px solid #f1f1f1" }}>{r.credentialNumber || "-"}</td>
-                <td style={{ padding: 10, borderBottom: "1px solid #f1f1f1" }}>{new Date(r.validUntil).toLocaleString()}</td>
-              </tr>
-            ))}
-            {rows.length === 0 && (
-              <tr><td colSpan={5} style={{ padding: 16 }}>No credentials yet</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+          )}
+
+          {credentials.map((c) => (
+            <tr key={c.id} className="border-t">
+              <td className="p-2">{c.visitorName}</td>
+              <td className="p-2">{c.type}</td>
+              <td className="p-2">{c.status}</td>
+              <td className="p-2">{c.zoneName || "—"}</td>
+              <td className="p-2">{c.allowedZoneNames.join(", ") || "—"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

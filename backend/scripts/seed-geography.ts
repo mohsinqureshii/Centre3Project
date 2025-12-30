@@ -1,9 +1,15 @@
-import { prisma } from "../src/prisma";
+import prisma from "../src/prisma";
 
 async function seed() {
   console.log("Seeding Saudi geography...");
 
+  // Optional: Clear previous data to avoid duplicates
+  await prisma.room.deleteMany({});
+  await prisma.zone.deleteMany({});
+  await prisma.location.deleteMany({});
+
   for (let i = 1; i <= 10; i++) {
+    // 1️⃣ Create location
     const location = await prisma.location.create({
       data: {
         country: "Saudi Arabia",
@@ -16,18 +22,23 @@ async function seed() {
     });
 
     for (let z = 1; z <= 5; z++) {
+      // 2️⃣ Create zone with nested connect to location
       const zone = await prisma.zone.create({
         data: {
           name: `Zone ${z}`,
-          locationId: location.id,
+          location: { connect: { id: location.id } },
+          isActive: true,
+          isLockable: true,
         },
       });
 
       for (let r = 1; r <= 10; r++) {
+        // 3️⃣ Create room with nested connect to zone and location
         await prisma.room.create({
           data: {
             name: `Room ${r}`,
-            zoneId: zone.id,
+            zone: { connect: { id: zone.id } },
+            location: { connect: { id: location.id } },
           },
         });
       }
@@ -39,7 +50,7 @@ async function seed() {
 
 seed()
   .catch((err) => {
-    console.error(err);
+    console.error("❌ Seed failed:", err);
     process.exit(1);
   })
   .finally(async () => {

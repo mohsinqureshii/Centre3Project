@@ -9,7 +9,7 @@ export default function RequestsPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    apiGet("/requests")
+    apiGet("/api/requests")
       .then(setData)
       .catch(() => setError("Failed to load requests"));
   }, []);

@@ -22,13 +22,13 @@ export default function LocationStep({
 
   // Load locations
   useEffect(() => {
-    apiGet("/settings/locations").then(setLocations);
+    apiGet("/api/settings/locations").then(setLocations);
   }, []);
 
   // Load zones when location changes
   useEffect(() => {
     if (data.location?.id) {
-      apiGet(`/settings/zones?locationId=${data.location.id}`).then(setZones);
+      apiGet(`/api/settings/zones?locationId=${data.location.id}`).then(setZones);
       setRooms([]);
     }
   }, [data.location?.id]);
@@ -36,7 +36,7 @@ export default function LocationStep({
   // Load rooms when zone changes
   useEffect(() => {
     if (data.zone?.id) {
-      apiGet(`/settings/rooms?zoneId=${data.zone.id}`).then(setRooms);
+      apiGet(`/api/settings/rooms?zoneId=${data.zone.id}`).then(setRooms);
     }
   }, [data.zone?.id]);
 
@@ -45,25 +45,25 @@ export default function LocationStep({
       <h2 className="text-lg font-semibold mb-4">Step 2 — Location</h2>
 
       {/* LOCATION */}
-      <select
-        className="w-full border p-2 mb-4 text-black bg-white"
-        value={data.location?.id || ""}
-        onChange={(e) => {
-          const selected = locations.find(l => l.id === e.target.value);
-          onChange({
-            location: { id: selected.id, name: selected.name },
-            zone: null,
-            room: null,
-          });
-        }}
-      >
-        <option value="">Select Location</option>
-        {locations.map((loc) => (
-          <option key={loc.id} value={loc.id}>
-            {loc.name}
-          </option>
-        ))}
-      </select>
+<select
+  className="w-full border p-2 mb-4 text-black bg-white"
+  value={data.location?.id || ""}
+  onChange={(e) => {
+    const selected = locations.find(l => l.id === e.target.value);
+    onChange({
+      location: selected ? { id: selected.id, name: selected.siteName } : null,
+      zone: null,
+      room: null,
+    });
+  }}
+>
+  <option value="">Select Location</option>
+  {locations.map((loc) => (
+    <option key={loc.id} value={loc.id}>
+      {loc.siteName}
+    </option>
+  ))}
+</select>
 
       {/* ZONE */}
       <select

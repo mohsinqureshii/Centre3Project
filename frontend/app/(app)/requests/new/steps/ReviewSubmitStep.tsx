@@ -14,46 +14,46 @@ export default function ReviewSubmitStep({ data, onBack }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+const handleSubmit = async () => {
+  try {
+    setLoading(true);
+    setError(null);
 
-      // 1️⃣ CREATE DRAFT
-      const draftPayload = {
-        title: data.title,
-        visitType: data.visitType,
-        purpose: data.purpose,
-        visitDate: data.visitDate,
-        startTime: data.startTime,
-        endTime: data.endTime,
-        host: data.host,
+    const draftPayload = {
+      title: data.title,
+      visitType: data.visitType,
+      purpose: data.purpose,
+      visitDate: data.visitDate,
+      startTime: data.startTime,
+      endTime: data.endTime,
+      host: data.host,
 
-        locationId: data.location.id,
-        zoneId: data.zone.id,
-        roomId: data.room.id,
+      locationId: data.location.id,
+      zoneId: data.zone.id,
+      roomId: data.room.id,
 
-        visitors: data.visitors,
-      };
+      visitors: data.visitors,
+    };
 
-      const draft = await apiPost("/requests/draft", draftPayload);
+    // ✅ CREATE DRAFT
+    const draft = await apiPost("/api/requests/draft", draftPayload);
 
-      if (!draft?.id) {
-        throw new Error("Draft creation failed");
-      }
-
-      // 2️⃣ SUBMIT DRAFT
-      await apiPost(`/requests/${draft.id}/submit`, {});
-
-      // 3️⃣ REDIRECT
-      router.push("/requests");
-    } catch (e: any) {
-      console.error(e);
-      setError("Submit failed. Please check required fields.");
-    } finally {
-      setLoading(false);
+    if (!draft?.id) {
+      throw new Error("Draft creation failed");
     }
-  };
+
+    // ✅ SUBMIT DRAFT
+    await apiPost(`/api/requests/${draft.id}/submit`, {});
+
+    router.push("/requests");
+  } catch (e) {
+    console.error(e);
+    setError("Submit failed. Please check required fields.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div>

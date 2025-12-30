@@ -32,7 +32,7 @@ export async function listApprovalInbox(role: string) {
     requestNo: s.request.requestNo,
     requestType: s.request.requestType,
     requestorName: s.request.requestorName,
-    siteName: s.request.location.siteName,
+    siteName: s.request.location!.siteName,
     submittedAt: s.request.updatedAt,
     vip: s.request.vip,
     status: s.request.status,

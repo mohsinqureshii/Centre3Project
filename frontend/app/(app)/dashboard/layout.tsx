@@ -1,5 +1,21 @@
-import AuthGuard from "@/components/AuthGuard";
+"use client";
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  return <AuthGuard>{children}</AuthGuard>;
+import { useAuth } from "../../hooks/useAuth";
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Checking authentication...
+      </div>
+    );
+  }
+
+  return <>{children}</>;
 }

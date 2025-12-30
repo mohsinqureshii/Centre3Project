@@ -17,7 +17,7 @@ export async function buildApprovalFlow(requestId: string) {
   // Find active process
   const process = await prisma.processDefinition.findFirst({
     where: {
-      requestType: req.requestType,
+  ...(req.requestType ? { requestType: req.requestType } : {}),
       isActive: true,
     },
     include: {

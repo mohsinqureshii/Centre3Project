@@ -103,7 +103,7 @@ export default function UsersPage() {
     functionName: "",
     zone: "",
     expiry: "", // yyyy-mm-dd
-    tempPassword: "",
+    temporaryPassword: "",
   });
 
   const loadUsers = useCallback(async () => {

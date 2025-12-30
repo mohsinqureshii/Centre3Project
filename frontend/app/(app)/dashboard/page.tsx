@@ -17,3 +17,21 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+// import { cookies } from "next/headers";
+// import { redirect } from "next/navigation";
+
+// export default function DashboardPage() {
+//   const cookieStore = cookies();
+//   const token = cookieStore.get("centre3_token")?.value;
+
+//   if (!token) {
+//     redirect("/dashboard"); // redirect to login if not authenticated
+//   }
+
+//   return (
+//     <div className="min-h-screen flex items-center justify-center">
+//       <h1 className="text-3xl font-bold">Welcome to Dashboard!</h1>
+//     </div>
+//   );
+// }

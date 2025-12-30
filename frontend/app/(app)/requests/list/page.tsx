@@ -11,7 +11,7 @@ export default function RequestsListPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    apiGet('/requests')
+    apiGet('/api/requests')
       .then(setRequests)
       .finally(() => setLoading(false));
   }, []);
@@ -50,8 +50,8 @@ export default function RequestsListPage() {
               <td className="p-2">{req.purpose}</td>
 
               <td className="p-2">
-                {req.locationName} / {req.zoneName} / {req.roomName}
-              </td>
+{req.location ? `${req.location.siteName} / ${req.zone?.name ?? "-"} / ${req.room?.name ?? "-"}`
+    : "- / - / -"}              </td>
 
               <td className="p-2 text-center">
                 {req.visitors?.length ?? 0}
